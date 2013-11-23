@@ -9,12 +9,14 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
 <head>
   <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="jquery-ui-1.8.10.custom.min.js"></script>
+  <script type="text/javascript" src="tag-it.min.js"></script>
   <script type="text/javascript" src="asana.js"></script>
   <script type="text/javascript" src="options.js"></script>
   <script type="text/javascript" src="api_bridge.js"></script>
   <script type="text/javascript" src="server_model.js"></script>
   <script type="text/javascript" src="load_typekit.js"></script>
   <link rel="stylesheet" href="popup.css"/>
+  <link rel="stylesheet" href="jquery.tagit.css"/>
   <title>
     Asana Quick Add
   </title>
@@ -61,6 +63,28 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
       </div>
       <div class="right-column"></div>
     </div>
+
+      <div class="tag-row">
+          <div class="left-column">
+          </div>
+          <div class="middle-column">
+              <ul id="tags_input" class="tagit ui-widget ui-widget-content ui-corner-all"></ul>
+          </div>
+          <div class="right-column">
+
+          </div>
+      </div>
+      <div class="project-row">
+          <div class="left-column">
+          </div>
+          <div class="middle-column">
+              <ul id="projects_input"></ul>
+          </div>
+          <div class="right-column">
+
+          </div>
+      </div>
+
     <div class="assignee-row">
       <div class="left-column">
         <span class="icon-assignee sprite"></span>

@@ -103,6 +103,39 @@ Asana.ServerModel = {
         }, options);
   },
 
+
+    /**
+     * Requests the set of projects in a workspace.
+     *
+     * @param callback {Function(projects)} Callback on success.
+     *     projects {dict[]}
+     */
+    projects: function(workspace_id, callback, errback, options) {
+        var self = this;
+        Asana.ApiBridge.request(
+            "GET", "/workspaces/" + workspace_id + "/projects",
+            {},
+            function(response) {
+                self._makeCallback(response, callback, errback);
+            }, options);
+    },
+
+    /**
+     * Requests the set of tags in a workspace.
+     *
+     * @param callback {Function(tags)} Callback on success.
+     *     tags {dict[]}
+     */
+    tags: function(workspace_id, callback, errback, options) {
+        var self = this;
+        Asana.ApiBridge.request(
+            "GET", "/workspaces/" + workspace_id + "/tags",
+            {},
+            function(response) {
+                self._makeCallback(response, callback, errback);
+            }, options);
+    },
+
   /**
    * Requests the user record for the logged-in user.
    *
@@ -133,6 +166,28 @@ Asana.ServerModel = {
           self._makeCallback(response, callback, errback);
         });
   },
+
+    createTag: function(workspace_id, tag, callback, errback) {
+        var self = this;
+        Asana.ApiBridge.request(
+            "POST",
+            "/workspaces/" + workspace_id + "/tags",
+            tag,
+            function(response) {
+                self._makeCallback(response, callback, errback);
+            });
+    },
+
+    addTag: function(task_id, tag_id, callback, errback) {
+        var self = this;
+        Asana.ApiBridge.request(
+            "POST",
+            "/tasks/" + task_id + "/addTag",
+            { tag: tag_id },
+            function(response) {
+                self._makeCallback(response, callback, errback);
+            });
+    },
 
   logEvent: function(event) {
     Asana.ApiBridge.request(
@@ -196,6 +251,25 @@ Asana.ServerModel = {
               }, null, { miss_cache: true });
             };
             fetchUsers();
+
+
+              // Fetch projects in each workspace.
+              var fetchProjects = function() {
+                  me.projects(workspaces[i].id, function(projects) {
+
+                  }, null, { miss_cache: true });
+              };
+              fetchProjects();
+
+
+              // Fetch tags in each workspace.
+              var fetchTags = function() {
+                  me.tags(workspaces[i].id, function(tags) {
+
+                  }, null, { miss_cache: true });
+              };
+              fetchTags();
+
           }
         }, null, { miss_cache: true })
       }

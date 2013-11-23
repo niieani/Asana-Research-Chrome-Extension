@@ -4,7 +4,7 @@
 Popup = {
 
   // Is this an external popup window? (vs. the one from the menu)
-  is_external: false,
+  is_external: true, // TODO: was false
 
   // Options loaded when popup opened.
   options: null,
@@ -26,6 +26,8 @@ Popup = {
   workspaces: null,
   users: null,
   user_id: null,
+  projects: null,
+  tags: null,
   
   // Typeahead ui element
   typeahead: null,
@@ -147,6 +149,8 @@ Popup = {
         });
       }
       me.maybeDisablePageDetailsButton();
+
+        // TODO: add automatic save
     });
 
     // The page details button fills in fields with details from the page
@@ -325,6 +329,42 @@ Popup = {
       me.typeahead.updateUsers(users);
       me.setAddEnabled(true);
     });
+
+    // Update tags.
+      Asana.ServerModel.tags(workspace_id, function(tags) {
+          me.tags = tags;
+
+          me.tags_in_asana = new Array();
+          tags.forEach(function(tag) {
+              me.tags_in_asana.push(tag.name)
+          });
+
+          $('#tags_input').tagit({
+              availableTags: me.tags_in_asana,
+              autocomplete: {
+                  autoFocus: true
+              },
+              placeholderText: "Tags"
+          });
+      });
+
+      // Update projects.
+      Asana.ServerModel.projects(workspace_id, function(projects) {
+          me.projects = projects;
+
+          me.projects_in_asana = new Array();
+          projects.forEach(function(project) {
+              me.projects_in_asana.push(project.name)
+          });
+
+          $('#projects_input').tagit({
+              availableTags: me.projects_in_asana,
+              autocomplete: {
+                  autoFocus: true
+              },
+              placeholderText: "Projects"
+          });
+      });
   },
 
   /**
@@ -365,11 +405,103 @@ Popup = {
       });
     }
 
+      // Prepare tags:
+
+      var tags_to_add_all = new Array();
+
+      $("#tags_input > li > span").each(function(index) {
+          tags_to_add_all.push($(this).text());
+      });
+
+      var tags_to_create = $(tags_to_add_all).not(me.tags_in_asana).get();
+      console.log(tags_to_create);
+
+      var tag_ids_to_add = new Array();
+
+      me.tags.forEach(function(tag) {
+          if(tags_to_add_all.indexOf(tag.name) > -1)
+          {
+              tag_ids_to_add.push(tag.id);
+          }
+      });
+
+      tags_to_create.forEach(function(tag_name) {
+          Asana.ServerModel.createTag(
+              me.selectedWorkspaceId(),
+              {
+                  name: tag_name
+              },
+              function(tag) {
+                  //Success!
+                  tag_ids_to_add.push(tag.id);
+                  me.tags.push(tag);
+              },
+
+              function(response) {
+                  // Failure
+                  // TODO
+              }
+          );
+      });
+
+      console.log("will add tags:");
+      console.log(tag_ids_to_add);
+
+
+      // Prepare projects:
+
+      var projects_to_add_all = new Array();
+
+      $("#projects_input > li > span").each(function(index) {
+          projects_to_add_all.push($(this).text());
+      });
+
+      console.log("all pr to add:");
+      console.log(projects_to_add_all);
+      console.log("all pr");
+      console.log(me.projects_in_asana);
+      var projects_to_create = $(projects_to_add_all).not(me.projects_in_asana).get();
+      console.log(projects_to_create);
+
+      var project_ids_to_add = new Array();
+
+      me.projects.forEach(function(project) {
+          if(projects_to_add_all.indexOf(project.name) > -1)
+          {
+              project_ids_to_add.push(project.id);
+          }
+      });
+
+      projects_to_create.forEach(function(project_name) {
+          Asana.ServerModel.createproject(
+              me.selectedWorkspaceId(),
+              {
+                  name: project_name
+              },
+              function(project) {
+                  //Success!
+                  project_ids_to_add.push(project.id);
+                  me.projects.push(project);
+                  console.log("successfully created project: " + project.name);
+              },
+
+              function(response) {
+                  // Failure
+                  // TODO
+                  console.log("failed to create project: " + project_name);
+              }
+          );
+      });
+
+      console.log("will add projects:");
+      console.log(project_ids_to_add);
+
     Asana.ServerModel.createTask(
         me.selectedWorkspaceId(),
         {
           name: $("#name_input").val(),
           notes: $("#notes_input").val(),
+          projects: project_ids_to_add,
           // Default assignee to self
           assignee: me.typeahead.selected_user_id || me.user_id
         },
@@ -378,6 +510,24 @@ Popup = {
           Asana.ServerModel.logEvent({
             name: "ChromeExtension-CreateTask-Success"
           });
+
+            // Add the tags:
+            tag_ids_to_add.forEach(function(tag_id) {
+                    Asana.ServerModel.addTag(
+                        task.id,
+                        tag_id,
+                        function(tag) {
+                            //Success!
+                            console.log("successfully tagged: " + tag_id);
+                        },
+                        function(response) {
+                            // Failure
+                            // TODO
+                            console.log("failed to tag: " + tag_id);
+                        }
+                    );
+            });
+
           me.setAddWorking(false);
           me.showSuccess(task);
           me.resetFields();
