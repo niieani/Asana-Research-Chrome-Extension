@@ -341,10 +341,22 @@ Popup = {
 
           $('#tags_input').tagit({
               availableTags: me.tags_in_asana,
+              removeConfirmation: true,
+              allowSpaces: true,
               autocomplete: {
                   autoFocus: true
               },
-              placeholderText: "Tags"
+              caseSensitive: false,
+              placeholderText: "Tags",
+              preprocessTag: function(val) {
+                  if (!val) { return ''; }
+                  // find the correct case
+                  var index = $.inArrayIn(val, me.tags_in_asana);
+                  if (index > -1)
+                      return me.tags_in_asana[index];
+                  else
+                      return val;
+              }
           });
       });
 
@@ -359,10 +371,22 @@ Popup = {
 
           $('#projects_input').tagit({
               availableTags: me.projects_in_asana,
+              removeConfirmation: true,
+              allowSpaces: true,
               autocomplete: {
                   autoFocus: true
               },
-              placeholderText: "Projects"
+              caseSensitive: false,
+              placeholderText: "Projects",
+              preprocessTag: function(val) {
+                  if (!val) { return ''; }
+                  // find the correct case
+                  var index = $.inArrayIn(val, me.projects_in_asana);
+                  if (index > -1)
+                      return me.projects_in_asana[index];
+                  else
+                      return val;
+              }
           });
       });
   },
@@ -407,11 +431,13 @@ Popup = {
 
       // Prepare tags:
 
-      var tags_to_add_all = new Array();
+      var tags_to_add_all = $("#tags_input").tagit("assignedTags");
 
-      $("#tags_input > li > span").each(function(index) {
-          tags_to_add_all.push($(this).text());
-      });
+//      var tags_to_add_all = new Array();
+//
+//      $("#tags_input > li > span").each(function(index) {
+//          tags_to_add_all.push($(this).text());
+//      });
 
       var tags_to_create = $(tags_to_add_all).not(me.tags_in_asana).get();
       console.log(tags_to_create);
@@ -450,11 +476,13 @@ Popup = {
 
       // Prepare projects:
 
-      var projects_to_add_all = new Array();
+      var projects_to_add_all = $("#projects_input").tagit("assignedTags");
 
-      $("#projects_input > li > span").each(function(index) {
-          projects_to_add_all.push($(this).text());
-      });
+//      var projects_to_add_all = new Array();
+//
+//      $("#projects_input > li > span").each(function(index) {
+//          projects_to_add_all.push($(this).text());
+//      });
 
       console.log("all pr to add:");
       console.log(projects_to_add_all);
