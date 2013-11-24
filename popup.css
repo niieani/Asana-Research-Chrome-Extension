@@ -315,7 +315,41 @@ a, input, textarea {
   height: 96px;
 }
 
-#use_page_details {
+.icon-save {
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+    background-image: url('./save.png');
+}
+
+.icon-use-link {
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+}
+
+.icon-use-link.no-favicon {
+    height: 18px;
+    width: 18px;
+    background-position: -200px 0px;
+    background-size: auto auto;
+}
+
+.icon-use-link-arrow {
+    height: 18px;
+    width: 18px;
+    background-position: -225px 0px;
+    position: absolute;
+    top: 7px;
+    left: 3px;
+}
+
+.icon-use-window-arrow {
+    top: 0;
+    left: 3px;
+}
+
+.use_details {
   width: 20px;
   height: 20px;
   position: relative;
@@ -325,43 +359,21 @@ a, input, textarea {
   cursor: pointer;
 }
 
-#use_page_details:not(.disabled):hover {
+.use_details:not(.disabled):hover {
   border: 1px solid #e5e5e5;
 }
 
-#use_page_details.disabled {
+.use_details.disabled {
   opacity: .25;
   cursor: default;
 }
 
-#use_page_details:not(.disabled):hover .icon-use-link-arrow {
+.use_details:not(.disabled):hover .icon-use-link-arrow {
   background-position: -225px -25px;
 }
 
-.icon-use-link {
-  height: 16px;
-  width: 16px;
-  background-size: 16px 16px;
-}
-
-.icon-use-link.no-favicon {
-  height: 18px;
-  width: 18px;
-  background-position: -200px 0px;
-  background-size: auto auto;
-}
-
-#use_page_details:not(.disabled):hover .icon-use-link.no-favicon {
-  background-position: -200px -25px;
-}
-
-.icon-use-link-arrow {
-  height: 18px;
-  width: 18px;
-  background-position: -225px 0px;
-  position: absolute;
-  top: 7px;
-  left: 3px;
+.use_details:not(.disabled):hover .icon-use-link.no-favicon {
+    background-position: -200px -25px;
 }
 
 #assignee {

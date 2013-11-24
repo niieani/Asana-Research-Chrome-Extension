@@ -52,7 +52,7 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
         <input id="name_input" tabindex="0" placeholder="Task" />
       </div>
       <div class="right-column">
-        <div id="use_page_details" title="Insert page title and URL"><div class="icon-use-link-arrow sprite"></div><div class="icon-use-link"></div></div>
+        <div id="use_page_details" class="use_details" title="Insert page title and URL"><div class="icon-use-link-arrow sprite"></div><div class="icon-use-link"></div></div>
       </div>
     </div>
     <div class="notes-row">
@@ -62,7 +62,9 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
       <div class="middle-column">
         <textarea id="notes_input" tabindex="0" placeholder="Description"></textarea>
       </div>
-      <div class="right-column"></div>
+      <div class="right-column">
+          <div id="use_window_details" class="use_details" title="Insert page titles and URLs from the current window"><div class="icon-use-link-arrow sprite"></div><div class="icon-use-link-arrow icon-use-window-arrow sprite"></div><div class="icon-use-link"></div></div>
+      </div>
     </div>
 
       <div class="tag-row">
@@ -72,7 +74,7 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
               <ul id="tags_input" class="tagit ui-widget ui-widget-content ui-corner-all"></ul>
           </div>
           <div class="right-column">
-
+              <div id="save_tags" class="use_details" title="Save Default Tags"><div class="icon-save"></div></div>
           </div>
       </div>
       <div class="project-row">
@@ -82,7 +84,7 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
               <ul id="projects_input"></ul>
           </div>
           <div class="right-column">
-
+              <div id="save_projects" class="use_details" title="Save Default Projects"><div class="icon-save"></div></div>
           </div>
       </div>
 
@@ -94,7 +96,9 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
         <input id="assignee_input" placeholder="Assignee" />
         <div id="assignee" tabindex="0"></div>
       </div>
-      <div class="right-column"></div>
+      <div class="right-column">
+          <div id="save_assignee" class="use_details" title="Save Default Assignee"><div class="icon-save"></div></div>
+      </div>
     </div>
 
     <div id="assignee_list_container">

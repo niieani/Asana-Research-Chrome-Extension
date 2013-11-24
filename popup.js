@@ -14,6 +14,8 @@ Popup = {
   page_url: null,
   page_selection: null,
   favicon_url: null,
+  active_window_titles: null,
+  active_window_urls: null,
 
   // State to track so we only log events once.
   has_edited_name: false,
@@ -47,10 +49,17 @@ Popup = {
     // Starting with a reference to the window and tab that were active when
     // the popup was opened ...
     chrome.tabs.query({
-      active: true,
       currentWindow: true
     }, function(tabs) {
-      var tab = tabs[0];
+      var tab = null;
+      var active_window_urls = new Array();
+      var active_window_titles = new Array();
+      tabs.forEach(function(single_tab){
+          if(single_tab.active)
+            tab = single_tab;
+          active_window_urls.push(single_tab.url);
+          active_window_titles.push(single_tab.title);
+      });
       // Now load our options ...
       Asana.ServerModel.options(function(options) {
         me.options = options;
@@ -67,7 +76,10 @@ Popup = {
               me.showAddUi(
                   quick_add_request.url, quick_add_request.title,
                   quick_add_request.selected_text,
-                  quick_add_request.favicon_url);
+                  quick_add_request.favicon_url,
+                  quick_add_request.active_window_titles,
+                  quick_add_request.active_window_urls
+              );
             } else {
               Asana.ServerModel.logEvent({
                 name: "ChromeExtension-Open-Button"
@@ -85,7 +97,9 @@ Popup = {
                 }
               };
               chrome.runtime.onMessage.addListener(listener);
-              me.showAddUi(tab.url, tab.title, '', tab.favIconUrl);
+              me.showAddUi(tab.url, tab.title, '', tab.favIconUrl,
+                  active_window_titles,
+                  active_window_urls);
             }
           } else {
             // The user is not even logged in. Prompt them to do so!
@@ -143,7 +157,7 @@ Popup = {
     });
     $("#notes_input").keyup(function() {
       if (!me.has_edited_notes && $("#notes_input").val() !== "") {
-        me.has_edited_notes= true;
+        me.has_edited_notes = true;
         Asana.ServerModel.logEvent({
           name: "ChromeExtension-ChangedTaskNotes"
         });
@@ -155,24 +169,72 @@ Popup = {
 
     // The page details button fills in fields with details from the page
     // in the current tab (cached when the popup opened).
-    var use_page_details_button = $("#use_page_details");
-    use_page_details_button.click(function() {
-      if (!(use_page_details_button.hasClass('disabled'))) {
-        // Page title -> task name
-        $("#name_input").val(me.page_title);
-        // Page url + selection -> task notes
-        var notes = $("#notes_input");
-        notes.val(notes.val() + me.page_url + "\n" + me.page_selection);
-        // Disable the page details button once used.        
-        use_page_details_button.addClass('disabled');
-        if (!me.has_used_page_details) {
-          me.has_used_page_details = true;
-          Asana.ServerModel.logEvent({
-            name: "ChromeExtension-UsedPageDetails"
-          });
-        }
-      }
-    });
+      var use_page_details_button = $("#use_page_details");
+      var use_window_details_button = $("#use_window_details");
+      use_page_details_button.click(function() {
+          if (!(use_page_details_button.hasClass('disabled'))) {
+              // Page title -> task name
+              $("#name_input").val(me.page_title);
+              // Page url + selection -> task notes
+              var notes = $("#notes_input");
+              notes.val(notes.val() + me.page_url + "\n" + me.page_selection);
+              // Disable the page & window details button once used.
+              use_page_details_button.addClass('disabled');
+              use_window_details_button.addClass('disabled');
+              if (!me.has_used_page_details) {
+                  me.has_used_page_details = true;
+                  Asana.ServerModel.logEvent({
+                      name: "ChromeExtension-UsedPageDetails"
+                  });
+              }
+          }
+      });
+
+      use_window_details_button.click(function() {
+          if (!(use_window_details_button.hasClass('disabled'))) {
+              // window title -> task name
+              $("#name_input").val(me.page_title);
+              // Page url + selection -> task notes
+              var notes = $("#notes_input");
+              var notes_output = notes.val();
+              me.active_window_titles.forEach(function(title, index){
+                  notes_output = notes_output + title + "\n" + me.active_window_urls[index] + "\n\n";
+              });
+              notes.val(notes_output + me.page_selection);
+              // Disable the page & window details button once used.
+              use_page_details_button.addClass('disabled');
+              use_window_details_button.addClass('disabled');
+              if (!me.has_used_window_details) {
+                  me.has_used_window_details = true;
+                  Asana.ServerModel.logEvent({
+                      name: "ChromeExtension-UsedWindowDetails"
+                  });
+              }
+          }
+      });
+
+      var save_tags_button = $("#save_tags");
+      save_tags_button.click(function() {
+          // Save selection as new default.
+          me.options.default_tags = $("#tags_input").tagit("assignedTags");
+          console.log(me.options.default_tags);
+          Asana.ServerModel.saveOptions(me.options, function() {});
+      });
+
+      var save_projects_button = $("#save_projects");
+      save_projects_button.click(function() {
+          // Save selection as new default.
+          me.options.default_projects = $("#projects_input").tagit("assignedTags");
+          Asana.ServerModel.saveOptions(me.options, function() {});
+      });
+
+      var save_assignee_button = $("#save_assignee");
+      save_assignee_button.click(function() {
+          var assignee_id = me.typeahead.selected_user_id;
+          // Save selection as new default.
+          me.options.default_assignee_id = assignee_id;
+          Asana.ServerModel.saveOptions(me.options, function() {});
+      });
 
     // Make a typeahead for assignee
     me.typeahead = new UserTypeahead("assignee");
@@ -201,7 +263,7 @@ Popup = {
     });
   },
 
-  showAddUi: function(url, title, selected_text, favicon_url) {
+  showAddUi: function(url, title, selected_text, favicon_url, active_window_titles, active_window_urls) {
     var me = this;
 
     // Store off info from page we got triggered from.
@@ -209,6 +271,8 @@ Popup = {
     me.page_title = title;
     me.page_selection = selected_text;
     me.favicon_url = favicon_url;
+    me.active_window_titles = active_window_titles;
+    me.active_window_urls = active_window_urls;
 
     // Populate workspace selector and select default.
     Asana.ServerModel.me(function(user) {
@@ -238,6 +302,53 @@ Popup = {
         });
 
         // Set initial UI state
+
+          $('#tags_input').tagit({
+              removeConfirmation: true,
+              allowSpaces: true,
+              autocomplete: {
+                  autoFocus: true,
+                  source: function(request, response){
+                      response( $.ui.autocomplete.filter(
+                          me.tags_in_asana, request.term ) );
+                  }
+              },
+              caseSensitive: false,
+              placeholderText: "Tags",
+              preprocessTag: function(val) {
+                  if (!val) { return ''; }
+                  // find the correct case
+                  var index = $.inArrayIn(val, me.tags_in_asana);
+                  if (index > -1)
+                      return me.tags_in_asana[index];
+                  else
+                      return val;
+              }
+          });
+
+          $('#projects_input').tagit({
+              removeConfirmation: true,
+              allowSpaces: true,
+              autocomplete: {
+                  autoFocus: true,
+                  source: function(request, response){
+                      response( $.ui.autocomplete.filter(
+                          me.projects_in_asana, request.term ) );
+                  }
+              },
+              caseSensitive: false,
+              placeholderText: "Projects",
+              preprocessTag: function(val) {
+                  if (!val) { return ''; }
+                  // find the correct case
+                  var index = $.inArrayIn(val, me.projects_in_asana);
+                  if (index > -1)
+                      return me.projects_in_asana[index];
+                  else
+                      return val;
+              }
+          });
+
         me.resetFields();
         me.showView("add");
         var name_input = $("#name_input");
@@ -296,7 +407,21 @@ Popup = {
   resetFields: function() {
     $("#name_input").val("");
     $("#notes_input").val("");
-    this.typeahead.setSelectedUserId(this.user_id);
+    this.typeahead.setSelectedUserId(this.options.default_assignee_id);
+
+    $("#projects_input").tagit("removeAll");
+    if(typeof this.options.default_projects !== 'undefined')
+        this.options.default_projects.forEach(function(project){
+            console.log(project);
+            $("#projects_input").tagit("createTag", project);
+        });
+
+    $("#tags_input").tagit("removeAll");
+    if(typeof this.options.default_tags !== 'undefined')
+        this.options.default_tags.forEach(function(tag){
+            console.log(tag);
+            $("#tags_input").tagit("createTag", tag);
+        });
   },
 
   /**
@@ -326,6 +451,11 @@ Popup = {
     // Update assignee list.
     me.setAddEnabled(false);
     Asana.ServerModel.users(workspace_id, function(users) {
+      // TODO: Add unassigned
+      users.push({
+          id: 0,
+          name: "Unassigned"
+      });
       me.typeahead.updateUsers(users);
       me.setAddEnabled(true);
     });
@@ -338,26 +468,6 @@ Popup = {
           tags.forEach(function(tag) {
               me.tags_in_asana.push(tag.name)
           });
-
-          $('#tags_input').tagit({
-              availableTags: me.tags_in_asana,
-              removeConfirmation: true,
-              allowSpaces: true,
-              autocomplete: {
-                  autoFocus: true
-              },
-              caseSensitive: false,
-              placeholderText: "Tags",
-              preprocessTag: function(val) {
-                  if (!val) { return ''; }
-                  // find the correct case
-                  var index = $.inArrayIn(val, me.tags_in_asana);
-                  if (index > -1)
-                      return me.tags_in_asana[index];
-                  else
-                      return val;
-              }
-          });
       });
 
       // Update projects.
@@ -367,26 +477,6 @@ Popup = {
           me.projects_in_asana = new Array();
           projects.forEach(function(project) {
               me.projects_in_asana.push(project.name)
-          });
-
-          $('#projects_input').tagit({
-              availableTags: me.projects_in_asana,
-              removeConfirmation: true,
-              allowSpaces: true,
-              autocomplete: {
-                  autoFocus: true
-              },
-              caseSensitive: false,
-              placeholderText: "Projects",
-              preprocessTag: function(val) {
-                  if (!val) { return ''; }
-                  // find the correct case
-                  var index = $.inArrayIn(val, me.projects_in_asana);
-                  if (index > -1)
-                      return me.projects_in_asana[index];
-                  else
-                      return val;
-              }
           });
       });
   },
@@ -430,14 +520,7 @@ Popup = {
     }
 
       // Prepare tags:
-
       var tags_to_add_all = $("#tags_input").tagit("assignedTags");
-
-//      var tags_to_add_all = new Array();
-//
-//      $("#tags_input > li > span").each(function(index) {
-//          tags_to_add_all.push($(this).text());
-//      });
 
       var tags_to_create = $(tags_to_add_all).not(me.tags_in_asana).get();
       console.log(tags_to_create);
@@ -473,23 +556,15 @@ Popup = {
       console.log("will add tags:");
       console.log(tag_ids_to_add);
 
-
       // Prepare projects:
-
       var projects_to_add_all = $("#projects_input").tagit("assignedTags");
 
-//      var projects_to_add_all = new Array();
-//
-//      $("#projects_input > li > span").each(function(index) {
-//          projects_to_add_all.push($(this).text());
-//      });
-
-      console.log("all pr to add:");
-      console.log(projects_to_add_all);
-      console.log("all pr");
-      console.log(me.projects_in_asana);
+//      console.log("all pr to add:");
+//      console.log(projects_to_add_all);
+//      console.log("all pr");
+//      console.log(me.projects_in_asana);
       var projects_to_create = $(projects_to_add_all).not(me.projects_in_asana).get();
-      console.log(projects_to_create);
+//      console.log(projects_to_create);
 
       var project_ids_to_add = new Array();
 
@@ -512,7 +587,6 @@ Popup = {
                   me.projects.push(project);
                   console.log("successfully created project: " + project.name);
               },
-
               function(response) {
                   // Failure
                   // TODO
@@ -530,8 +604,7 @@ Popup = {
           name: $("#name_input").val(),
           notes: $("#notes_input").val(),
           projects: project_ids_to_add,
-          // Default assignee to self
-          assignee: me.typeahead.selected_user_id || me.user_id
+          assignee: me.typeahead.selected_user_id // || me.user_id // Default assignee to self
         },
         function(task) {
           // Success! Show task success, then get ready for another input.
@@ -680,7 +753,11 @@ UserTypeahead = function(id) {
   // selection - there had to be a user action taken that causes us to call
   // `confirmSelection`, which would have updated user_id_to_select.
   me.input.blur(function() {
-    me.selected_user_id = me.user_id_to_select;
+    // If the user deleted the content - don't assign the task.
+    if(me.input.val() == "")
+        me.selected_user_id = null;
+      else
+        me.selected_user_id = me.user_id_to_select;
     me.has_focus = false;
     if (!Popup.has_reassigned) {
       Popup.has_reassigned = true;
