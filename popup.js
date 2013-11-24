@@ -217,7 +217,7 @@ Popup = {
       save_tags_button.click(function() {
           // Save selection as new default.
           me.options.default_tags = $("#tags_input").tagit("assignedTags");
-          console.log(me.options.default_tags);
+//          console.log(me.options.default_tags);
           Asana.ServerModel.saveOptions(me.options, function() {});
       });
 
@@ -412,14 +412,14 @@ Popup = {
     $("#projects_input").tagit("removeAll");
     if(typeof this.options.default_projects !== 'undefined')
         this.options.default_projects.forEach(function(project){
-            console.log(project);
+//            console.log(project);
             $("#projects_input").tagit("createTag", project);
         });
 
     $("#tags_input").tagit("removeAll");
     if(typeof this.options.default_tags !== 'undefined')
         this.options.default_tags.forEach(function(tag){
-            console.log(tag);
+//            console.log(tag);
             $("#tags_input").tagit("createTag", tag);
         });
   },
@@ -451,11 +451,6 @@ Popup = {
     // Update assignee list.
     me.setAddEnabled(false);
     Asana.ServerModel.users(workspace_id, function(users) {
-      // TODO: Add unassigned
-      users.push({
-          id: 0,
-          name: "Unassigned"
-      });
       me.typeahead.updateUsers(users);
       me.setAddEnabled(true);
     });
