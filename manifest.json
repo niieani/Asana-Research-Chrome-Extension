@@ -49,7 +49,8 @@
     "webRequestBlocking",
     "webNavigation",
     "*://*.asana.com/*",
-    "*://use.typekit.net/*"
+    "*://use.typekit.net/*",
+    "pageCapture"
   ],
   "content_security_policy": "script-src 'self' https://use.typekit.net; object-src 'self'",
   "commands": {

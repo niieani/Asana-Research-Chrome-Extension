@@ -189,7 +189,25 @@ Asana.ServerModel = {
             });
     },
 
-  logEvent: function(event) {
+    // small hack for the time being, as Blob isn't passed to ApiBridge.
+    addAttachment: function(task_id, fileblob, filename, callback, errback) {
+        var self = this;
+        // http://stackoverflow.com/questions/8593896/chrome-extension-how-to-pass-arraybuffer-or-blob-from-content-script-to-the-bac
+        Asana.ApiBridge.request(
+            "POST",
+            "/tasks/" + task_id + "/attachments",
+            { param: "file",
+              fileObjectURL: URL.createObjectURL(fileblob),
+              filename: filename
+            },
+            function(response) {
+                self._makeCallback(response, callback, errback);
+            },
+            { upload: true }
+        );
+    },
+
+    logEvent: function(event) {
     Asana.ApiBridge.request(
         "POST",
         "/logs",

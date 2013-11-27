@@ -4,7 +4,7 @@
 Popup = {
 
   // Is this an external popup window? (vs. the one from the menu)
-  is_external: true, // TODO: was false
+  is_external: false,
 
   // Options loaded when popup opened.
   options: null,
@@ -16,6 +16,8 @@ Popup = {
   favicon_url: null,
   active_window_titles: null,
   active_window_urls: null,
+  all_tabs: null,
+  this_tab: null,
 
   // State to track so we only log events once.
   has_edited_name: false,
@@ -33,6 +35,9 @@ Popup = {
   
   // Typeahead ui element
   typeahead: null,
+
+  // Cached attachments
+  attachments: new Array(),
 
   onLoad: function() {
     var me = this;
@@ -54,15 +59,20 @@ Popup = {
       var tab = null;
       var active_window_urls = new Array();
       var active_window_titles = new Array();
-      tabs.forEach(function(single_tab){
-          if(single_tab.active)
-            tab = single_tab;
-          active_window_urls.push(single_tab.url);
-          active_window_titles.push(single_tab.title);
-      });
+        tabs.forEach(function(single_tab){
+            if(single_tab.active)
+                tab = single_tab;
+            active_window_urls.push(single_tab.url);
+            active_window_titles.push(single_tab.title);
+        });
+        // TODO: fixme
+        me.all_tabs = tabs;
+        me.this_tab = tab;
+
       // Now load our options ...
       Asana.ServerModel.options(function(options) {
         me.options = options;
+
         // And ensure the user is logged in ...
         Asana.ServerModel.isLoggedIn(function(is_logged_in) {
           if (is_logged_in) {
@@ -210,6 +220,39 @@ Popup = {
                       name: "ChromeExtension-UsedWindowDetails"
                   });
               }
+          }
+      });
+
+      var add_attachment_button = $("#add_attachment_button");
+      var add_attachments_button = $("#add_attachments_button");
+
+      add_attachment_button.click(function() {
+          if (!(add_attachment_button.hasClass('disabled'))) {
+              console.log({ tabId: me.this_tab.id });
+              chrome.pageCapture.saveAsMHTML({ tabId: me.this_tab.id }, function(attachment){
+                  console.log("attaching");
+//                  me.attachments.push(attachment.slice(undefined, attachment.size, 'message/rfc822'));
+                  me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
+//                  me.attachment = attachment.slice(undefined, attachment.size, 'multipart/related');
+              });
+//              Disable the buttons once used.
+              add_attachment_button.addClass('disabled');
+              add_attachments_button.addClass('disabled');
+          }
+      });
+
+      add_attachments_button.click(function() {
+          if (!(add_attachments_button.hasClass('disabled'))) {
+              me.all_tabs.forEach(function(tab){
+                  chrome.pageCapture.saveAsMHTML({ tabId: tab.id }, function(attachment){
+                      console.log("attaching");
+//                      me.attachments.push(attachment.slice(undefined, attachment.size, 'message/rfc822'));
+                      me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
+                  });
+              });
+              // Disable the buttons once used.
+              add_attachment_button.addClass('disabled');
+              add_attachments_button.addClass('disabled');
           }
       });
 
@@ -422,6 +465,9 @@ Popup = {
 //            console.log(tag);
             $("#tags_input").tagit("createTag", tag);
         });
+
+      // TODO
+    this.attachments = new Array();
   },
 
   /**
@@ -571,7 +617,7 @@ Popup = {
       });
 
       projects_to_create.forEach(function(project_name) {
-          Asana.ServerModel.createproject(
+          Asana.ServerModel.createProject(
               me.selectedWorkspaceId(),
               {
                   name: project_name
@@ -586,6 +632,7 @@ Popup = {
                   // Failure
                   // TODO
                   console.log("failed to create project: " + project_name);
+                  console.log(response);
               }
           );
       });
@@ -623,6 +670,28 @@ Popup = {
                         }
                     );
             });
+
+            // Add the attachments:
+            if(me.attachments !== null)
+                me.attachments.forEach(function(attachment) {
+                    console.log("Trying to attach...");
+                    Asana.ServerModel.addAttachment(
+                        task.id,
+                        attachment,
+                        "archive.mhtml",
+                        function(reply) {
+                            //Success!
+                            console.log("Successfully attached (KBs): " + attachment.size);
+                            console.log(reply);
+                        },
+                        function(response) {
+                            // Failure
+                            console.log("Failed to attach (KBs):  " + attachment.size);
+                            console.log(response);
+                        }
+                    );
+                });
+            else console.log("Nothing to attach.");
 
           me.setAddWorking(false);
           me.showSuccess(task);

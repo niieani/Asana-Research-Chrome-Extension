@@ -165,10 +165,34 @@ Asana.ApiBridge = {
         }
       };
       if (http_method === "POST" || http_method === "PUT") {
-        attrs.data = JSON.stringify(body_data);
-        attrs.dataType = "json";
-        attrs.processData = false;
-        attrs.contentType = "application/json";
+          attrs.dataType = "json";
+          attrs.processData = false;
+          if (!options.upload)
+          {
+              console.log("processing post/put")
+              attrs.data = JSON.stringify(body_data);
+              attrs.contentType = "application/json";
+          }
+          else
+          {
+              console.log("processing file upload")
+              var xhr = new XMLHttpRequest();
+              xhr.open('GET', params.fileObjectURL, false);
+              xhr.responseType = 'blob';
+              xhr.onload = function()
+              {
+                  var formData = new FormData();
+                  formData.append(params.param, this.response, params.filename);
+
+                  attrs.data = formData;
+                  attrs.contentType = false;
+
+                  console.log(this.response);
+              }
+              xhr.send();
+              // cleanup
+              window.URL.revokeObjectURL(params.fileObjectURL);
+          }
       }
       $.ajax(attrs);
     });
