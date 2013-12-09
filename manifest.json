@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Asana Extension for Chrome",
-  "version": "1.1.0",
-  "description": "Quickly add tasks to Asana from any web page.",
+  "name": "Asana Research Extension for Chrome",
+  "version": "0.0.1",
+  "description": "Quickly add your research to Asana from any web page or Chrome window.",
   "icons": {
     "128": "icon128.png",
     "48": "icon48.png",
