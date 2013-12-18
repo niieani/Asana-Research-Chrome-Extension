@@ -788,6 +788,7 @@ UserTypeahead = function(id) {
   me.selected_user_id = null;
   me.user_id_to_select = null;
   me.has_focus = false;
+  me.selected = false;
 
   // Store off UI elements.
   me.input = $("#" + id + "_input");
@@ -818,11 +819,12 @@ UserTypeahead = function(id) {
   // `confirmSelection`, which would have updated user_id_to_select.
   me.input.blur(function() {
     // If the user deleted the content - don't assign the task.
-    if(me.input.val() == "")
+    if(me.input.val() == "" && !(me.selected === true))
         me.selected_user_id = null;
-      else
+    else
         me.selected_user_id = me.user_id_to_select;
     me.has_focus = false;
+    me.selected = false;
     if (!Popup.has_reassigned) {
       Popup.has_reassigned = true;
       Asana.ServerModel.logEvent({
@@ -1035,6 +1037,7 @@ Asana.update(UserTypeahead.prototype, {
 
   _confirmSelection: function() {
     this.user_id_to_select = this.selected_user_id;
+    this.selected = true;
   },
 
   _updateFilteredUsers: function() {
