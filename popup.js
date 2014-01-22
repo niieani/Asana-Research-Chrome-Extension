@@ -163,7 +163,7 @@ Popup = {
           name: "ChromeExtension-ChangedTaskName"
         });
       }
-      me.maybeDisablePageDetailsButton();
+//      me.maybeDisablePageDetailsButton();
     });
     $("#notes_input").keyup(function() {
       if (!me.has_edited_notes && $("#notes_input").val() !== "") {
@@ -172,10 +172,36 @@ Popup = {
           name: "ChromeExtension-ChangedTaskNotes"
         });
       }
-      me.maybeDisablePageDetailsButton();
+//      me.maybeDisablePageDetailsButton();
 
         // TODO: add automatic save
     });
+
+
+      addAttachment = function(){
+          console.log({ tabId: me.this_tab.id });
+          chrome.pageCapture.saveAsMHTML({ tabId: me.this_tab.id }, function(attachment){
+              console.log("attaching");
+//                  me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
+              me.attachments.push(attachment);
+          });
+//              Disable the buttons once used.
+//          add_attachment_button.addClass('disabled');
+//          add_attachments_button.addClass('disabled');
+      };
+
+      addAttachments = function(){
+          me.all_tabs.forEach(function(tab){
+              chrome.pageCapture.saveAsMHTML({ tabId: tab.id }, function(attachment){
+                  console.log("attaching");
+//                      me.attachments.push(attachment.slice(undefined, attachment.size, 'message/rfc822'));
+                  me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
+              });
+          });
+          // Disable the buttons once used.
+//          add_attachment_button.addClass('disabled');
+//          add_attachments_button.addClass('disabled');
+      }
 
     // The page details button fills in fields with details from the page
     // in the current tab (cached when the popup opened).
@@ -197,6 +223,7 @@ Popup = {
                       name: "ChromeExtension-UsedPageDetails"
                   });
               }
+              addAttachment();
           }
       });
 
@@ -220,42 +247,23 @@ Popup = {
                       name: "ChromeExtension-UsedWindowDetails"
                   });
               }
+              addAttachments();
           }
       });
-
+/*
       var add_attachment_button = $("#add_attachment_button");
       var add_attachments_button = $("#add_attachments_button");
 
       add_attachment_button.click(function() {
           if (!(add_attachment_button.hasClass('disabled'))) {
-              console.log({ tabId: me.this_tab.id });
-              chrome.pageCapture.saveAsMHTML({ tabId: me.this_tab.id }, function(attachment){
-                  console.log("attaching");
-//                  me.attachments.push(attachment.slice(undefined, attachment.size, 'message/rfc822'));
-                  me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
-//                  me.attachment = attachment.slice(undefined, attachment.size, 'multipart/related');
-              });
-//              Disable the buttons once used.
-              add_attachment_button.addClass('disabled');
-              add_attachments_button.addClass('disabled');
           }
       });
 
       add_attachments_button.click(function() {
           if (!(add_attachments_button.hasClass('disabled'))) {
-              me.all_tabs.forEach(function(tab){
-                  chrome.pageCapture.saveAsMHTML({ tabId: tab.id }, function(attachment){
-                      console.log("attaching");
-//                      me.attachments.push(attachment.slice(undefined, attachment.size, 'message/rfc822'));
-                      me.attachments.push(attachment.slice(undefined, attachment.size, 'application/x-mimearchive'));
-                  });
-              });
-              // Disable the buttons once used.
-              add_attachment_button.addClass('disabled');
-              add_attachments_button.addClass('disabled');
           }
       });
-
+*/
       var save_tags_button = $("#save_tags");
       save_tags_button.click(function() {
           // Save selection as new default.
@@ -292,12 +300,12 @@ Popup = {
   },
 
   setExpandedUi: function(is_expanded) {
-    if (this.is_external) {
+//    if (this.is_external) {
       window.resizeTo(
           Asana.POPUP_UI_WIDTH,
           (is_expanded ? Asana.POPUP_EXPANDED_UI_HEIGHT : Asana.POPUP_UI_HEIGHT)
               + Asana.CHROME_TITLEBAR_HEIGHT);
-    }
+//    }
   },
 
   showView: function(name) {
@@ -346,14 +354,22 @@ Popup = {
 
         // Set initial UI state
 
+          getCurrentTags = function(){
+              return me.tags_in_asana;
+          }
+          getCurrentProjects = function(){
+              return me.projects_in_asana;
+          }
+
           $('#tags_input').tagit({
               removeConfirmation: true,
               allowSpaces: true,
+              autoFocus: true,
               autocomplete: {
-                  autoFocus: true,
+//                  autoFocus: true,
                   source: function(request, response){
                       response( $.ui.autocomplete.filter(
-                          me.tags_in_asana, request.term ) );
+                          getCurrentTags(), request.term ) );
                   }
               },
               caseSensitive: false,
@@ -363,7 +379,10 @@ Popup = {
                   // find the correct case
                   var index = $.inArrayIn(val, me.tags_in_asana);
                   if (index > -1)
+                  {
+                      console.log(me.tags_in_asana[index]);
                       return me.tags_in_asana[index];
+                  }
                   else
                       return val;
               }
@@ -372,11 +391,12 @@ Popup = {
           $('#projects_input').tagit({
               removeConfirmation: true,
               allowSpaces: true,
+              autoFocus: true,
               autocomplete: {
-                  autoFocus: true,
+//                  autoFocus: true,
                   source: function(request, response){
                       response( $.ui.autocomplete.filter(
-                          me.projects_in_asana, request.term ) );
+                          getCurrentProjects(), request.term ) );
                   }
               },
               caseSensitive: false,
@@ -386,7 +406,10 @@ Popup = {
                   // find the correct case
                   var index = $.inArrayIn(val, me.projects_in_asana);
                   if (index > -1)
+                  {
+                      console.log(me.projects_in_asana[index]);
                       return me.projects_in_asana[index];
+                  }
                   else
                       return val;
               }
@@ -452,6 +475,8 @@ Popup = {
     $("#notes_input").val("");
     this.typeahead.setSelectedUserId(this.options.default_assignee_id);
 
+//    $("#projects_input").tagit();
+
     $("#projects_input").tagit("removeAll");
     if(typeof this.options.default_projects !== 'undefined')
         this.options.default_projects.forEach(function(project){
@@ -459,12 +484,18 @@ Popup = {
             $("#projects_input").tagit("createTag", project);
         });
 
+//    $("#tags_input").tagit();
+
     $("#tags_input").tagit("removeAll");
     if(typeof this.options.default_tags !== 'undefined')
         this.options.default_tags.forEach(function(tag){
 //            console.log(tag);
             $("#tags_input").tagit("createTag", tag);
         });
+
+
+    $("use_page_details_button").removeClass('disabled');
+    $("use_window_details_button").removeClass('disabled');
 
       // TODO
     this.attachments = new Array();
@@ -575,37 +606,15 @@ Popup = {
           }
       });
 
-      tags_to_create.forEach(function(tag_name) {
-          Asana.ServerModel.createTag(
-              me.selectedWorkspaceId(),
-              {
-                  name: tag_name
-              },
-              function(tag) {
-                  //Success!
-                  tag_ids_to_add.push(tag.id);
-                  me.tags.push(tag);
-              },
-
-              function(response) {
-                  // Failure
-                  // TODO
-              }
-          );
-      });
-
-      console.log("will add tags:");
-      console.log(tag_ids_to_add);
-
       // Prepare projects:
       var projects_to_add_all = $("#projects_input").tagit("assignedTags");
 
-//      console.log("all pr to add:");
-//      console.log(projects_to_add_all);
-//      console.log("all pr");
-//      console.log(me.projects_in_asana);
+      //      console.log("all pr to add:");
+      //      console.log(projects_to_add_all);
+      //      console.log("all pr");
+      //      console.log(me.projects_in_asana);
       var projects_to_create = $(projects_to_add_all).not(me.projects_in_asana).get();
-//      console.log(projects_to_create);
+      //      console.log(projects_to_create);
 
       var project_ids_to_add = new Array();
 
@@ -616,96 +625,282 @@ Popup = {
           }
       });
 
-      projects_to_create.forEach(function(project_name) {
-          Asana.ServerModel.createProject(
+      var refreshCache = function()
+      {
+          // TODO (doesn't work):
+          console.log("Cleaning cache");
+          chrome.runtime.sendMessage({
+              type: "cache-refresh"}, function(){} );
+      }
+
+      var prepTags = function() {
+          return $.Deferred(function(dfd){
+              tags_to_create.forEach(function(tag_name) {
+                  Asana.ServerModel.createTag(
+                      me.selectedWorkspaceId(),
+                      {
+                          name: tag_name
+                      },
+                      function(tag) {
+                          //Success!
+                          tag_ids_to_add.push(tag.id);
+                          me.tags_in_asana.push(tag.name);
+                          me.tags.push(tag); // TODO: not needed ?
+                          console.log(me.tags_in_asana);
+                          if (tags_to_create.indexOf(tag) == tags_to_create.length-1)
+                          {
+                              console.log("opica: ", projects_to_create);
+                              if (projects_to_create.length < 1)
+                              {
+                                  refreshCache();
+                              }
+                              dfd.resolve;
+                          }
+                      },
+
+                      function(response) {
+                          // Failure
+                          // TODO
+                          console.log("failed to create tag: " + tag_name);
+                          console.log(response);
+                          me.showError(response.errors[0].message);
+                      }
+                  );
+              });
+          }).promise();
+      }
+
+          var prepProjects = function(){
+                return $.Deferred(function(dfd){
+                    projects_to_create.forEach(function(project_name) {
+                        Asana.ServerModel.createProject(
+                            me.selectedWorkspaceId(),
+                            {
+                                name: project_name
+                            },
+                            function(project) {
+                                //Success!
+                                project_ids_to_add.push(project.id);
+                                me.projects_in_asana.push(project.name);
+                                me.projects.push(project); // TODO: not needed ?
+                                console.log("successfully created project: " + project.name);
+                                if (projects_to_create.indexOf(project) == projects_to_create.length-1)
+                                {
+                                    refreshCache();
+                                    dfd.resolve;
+                                }
+                            },
+                            function(response) {
+                                // Failure
+                                // TODO
+                                console.log("failed to create project: " + project_name);
+                                console.log(response);
+                                me.showError(response.errors[0].message);
+                            }
+                        );
+                    });
+                }).promise();
+          }
+
+
+      var createTask = function(){
+          console.log("will add tags:");
+          console.log(tag_ids_to_add);
+
+          console.log("will add projects:");
+          console.log(project_ids_to_add);
+
+          Asana.ServerModel.createTask(
               me.selectedWorkspaceId(),
               {
-                  name: project_name
+                  name: $("#name_input").val(),
+                  notes: $("#notes_input").val(),
+                  projects: project_ids_to_add,
+                  assignee: me.typeahead.selected_user_id // || me.user_id // Default assignee to self
               },
-              function(project) {
-                  //Success!
-                  project_ids_to_add.push(project.id);
-                  me.projects.push(project);
-                  console.log("successfully created project: " + project.name);
+              function(task) {
+                  // Success! Show task success, then get ready for another input.
+                  Asana.ServerModel.logEvent({
+                      name: "ChromeExtension-CreateTask-Success"
+                  });
+
+                  // Add the tags:
+                  tag_ids_to_add.forEach(function(tag_id) {
+                      Asana.ServerModel.addTag(
+                          task.id,
+                          tag_id,
+                          function(tag) {
+                              //Success!
+                              console.log("successfully tagged: " + tag_id);
+                          },
+                          function(response) {
+                              // Failure
+                              // TODO
+                              console.log("failed to tag: " + tag_id);
+                          }
+                      );
+                  });
+
+                  // ZIP.JS model:
+
+                  var zipModel = (function() {
+                      var zipFileEntry, zipWriter, writer, creationMethod, URL = webkitURL || mozURL || URL;
+
+                      return {
+                          setCreationMethod: function(method) {
+                              creationMethod = method;
+                          },
+                          addFiles: function addFiles(files, oninit, onadd, onprogress, onend) {
+                              var addIndex = 0;
+
+                              function nextFile() {
+                                  var file = files[addIndex];
+                                  onadd(file);
+                                  var filename = "archive"+addIndex+".mhtml";
+                                  zipWriter.add(filename, new zip.BlobReader(file), function() { //file.name
+                                      addIndex++;
+                                      if (addIndex < files.length)
+                                          nextFile();
+                                      else
+                                          onend();
+                                  }, onprogress);
+                              }
+
+                              function createZipWriter() {
+                                  zip.createWriter(writer, function(writer) {
+                                      zipWriter = writer;
+                                      oninit();
+                                      nextFile();
+                                  }, onerror);
+                              }
+
+                              if (zipWriter)
+                                  nextFile();
+                              else if (creationMethod == "Blob") {
+                                  writer = new zip.BlobWriter();
+                                  createZipWriter();
+                              }
+                              /*
+                               else {
+                               createTempFile(function(fileEntry) {
+                               zipFileEntry = fileEntry;
+                               writer = new zip.FileWriter(zipFileEntry);
+                               createZipWriter();
+                               });
+                               }
+                               */
+                          },
+                          getBlobURL: function(callback) {
+                              zipWriter.close(function(blob) {
+                                  var blobURL = creationMethod == "Blob" ? URL.createObjectURL(blob) : zipFileEntry.toURL();
+                                  //blobURL = window.createObjectURL(blob);
+                                  callback(blobURL);
+                                  zipWriter = null;
+                              });
+                          },
+                          getBlob: function(callback) {
+                              zipWriter.close(callback);
+                          }
+                      };
+                  })();
+
+                  // Add the attachments:
+                  if(me.attachments !== null && me.attachments.length > 0)
+                  {
+                      console.log("Trying to zip...");
+                      zipModel.setCreationMethod("Blob");
+                      zipModel.addFiles(me.attachments, function() {}, function(file) {
+                          console.log("Zipped file with " + file.size + " bytes" )
+                      }, function() {}, function() {
+                          zipModel.getBlobURL(function(attachment){
+//                        console.log("Trying to attach: " + attachment.name + " <> " + attachment.type);
+                              Asana.ServerModel.addAttachment(
+                                  task.id,
+                                  attachment,
+                                  'archive '+(new Date()).toString().split(' ').splice(1,3).join(' ')+'.zip',
+                                  'application/zip',
+                                  function(reply) {
+                                      //Success!
+                                      console.log("Successfully attached (KBs): " + reply.size);
+                                      console.log(reply);
+                                      me.setAddWorking(false);
+                                      me.showSuccess(task);
+                                      me.resetFields();
+                                      $("#name_input").focus();
+                                  },
+                                  function(response) {
+                                      // Failure
+                                      console.log("Failed to attach (KBs):  " + response.size);
+                                      console.log(response);
+                                      me.showError(response.errors[0].message);
+                                  }
+                              );
+                          });
+                      });
+
+
+                      // old
+                      /*
+                       me.attachments.forEach(function(attachment) {
+                       console.log("Trying to attach...");
+                       Asana.ServerModel.addAttachment(
+                       task.id,
+                       //attachment,
+                       URL.createObjectURL(attachment),
+                       "archive.mhtml",
+                       function(reply) {
+                       //Success!
+                       console.log("Successfully attached (KBs): " + attachment.size);
+                       console.log(reply);
+                       },
+                       function(response) {
+                       // Failure
+                       console.log("Failed to attach (KBs):  " + attachment.size);
+                       console.log(response);
+                       }
+                       );
+                       });
+                       */
+                  }
+                  else
+                  {
+                      console.log("Nothing to attach.");
+                      me.setAddWorking(false);
+                      me.showSuccess(task);
+                      me.resetFields();
+                      $("#name_input").focus();
+                  }
+                  /*
+                   //zip.createWriter(new zip.BlobWriter("application/zip"), function(zipWriter) {
+                   var no = 0;
+                   me.attachments.forEach(function(attachment) {
+                   no++;
+                   console.log("Trying to zip...");
+                   zipModel.addFiles()
+                   // use a BlobReader object to read the data stored into blob variable
+                   zipWriter.add("archive"+no+".mhtml", new zip.BlobReader(attachment), function() {
+                   // close the writer and calls callback function
+                   zipWriter.close(callback);
+                   });
+                   });
+                   //}, onerror);
+                   */
+
               },
               function(response) {
-                  // Failure
-                  // TODO
-                  console.log("failed to create project: " + project_name);
-                  console.log(response);
-              }
-          );
-      });
+                  // Failure. :( Show error, but leave form available for retry.
+                  Asana.ServerModel.logEvent({
+                      name: "ChromeExtension-CreateTask-Failure"
+                  });
+                  me.setAddWorking(false);
+                  me.showError(response.errors[0].message);
+              });
+      };
 
-      console.log("will add projects:");
-      console.log(project_ids_to_add);
 
-    Asana.ServerModel.createTask(
-        me.selectedWorkspaceId(),
-        {
-          name: $("#name_input").val(),
-          notes: $("#notes_input").val(),
-          projects: project_ids_to_add,
-          assignee: me.typeahead.selected_user_id // || me.user_id // Default assignee to self
-        },
-        function(task) {
-          // Success! Show task success, then get ready for another input.
-          Asana.ServerModel.logEvent({
-            name: "ChromeExtension-CreateTask-Success"
-          });
-
-            // Add the tags:
-            tag_ids_to_add.forEach(function(tag_id) {
-                    Asana.ServerModel.addTag(
-                        task.id,
-                        tag_id,
-                        function(tag) {
-                            //Success!
-                            console.log("successfully tagged: " + tag_id);
-                        },
-                        function(response) {
-                            // Failure
-                            // TODO
-                            console.log("failed to tag: " + tag_id);
-                        }
-                    );
-            });
-
-            // Add the attachments:
-            if(me.attachments !== null)
-                me.attachments.forEach(function(attachment) {
-                    console.log("Trying to attach...");
-                    Asana.ServerModel.addAttachment(
-                        task.id,
-                        attachment,
-                        "archive.mhtml",
-                        function(reply) {
-                            //Success!
-                            console.log("Successfully attached (KBs): " + attachment.size);
-                            console.log(reply);
-                        },
-                        function(response) {
-                            // Failure
-                            console.log("Failed to attach (KBs):  " + attachment.size);
-                            console.log(response);
-                        }
-                    );
-                });
-            else console.log("Nothing to attach.");
-
-          me.setAddWorking(false);
-          me.showSuccess(task);
-          me.resetFields();
-          $("#name_input").focus();
-        },
-        function(response) {
-          // Failure. :( Show error, but leave form available for retry.
-          Asana.ServerModel.logEvent({
-            name: "ChromeExtension-CreateTask-Failure"
-          });
-          me.setAddWorking(false);
-          me.showError(response.errors[0].message);
-        });
+      $.when(prepTags())
+          .then($.when(prepProjects())
+                  .then(createTask()));
   },
 
   /**
@@ -716,15 +911,17 @@ Popup = {
     Asana.ServerModel.taskViewUrl(task, function(url) {
       var name = task.name.replace(/^\s*/, "").replace(/\s*$/, "");
       var link = $("#new_task_link");
+        url = url + "/f";
       link.attr("href", url);
       link.text(name !== "" ? name : "Task");
+        /*
       link.unbind("click");
       link.click(function() {
         chrome.tabs.create({url: url});
         window.close();
         return false;
       });
-
+        */
       // Reset logging for multi-add
       me.has_edited_name = true;
       me.has_edited_notes = true;

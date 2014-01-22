@@ -175,21 +175,62 @@ Asana.ApiBridge = {
           }
           else
           {
-              console.log("processing file upload")
+              console.log("processing file upload");
+
+              // blob:chrome-extension%3A//[extension id]/[options uuid]
+              var blobUrl = params.fileObjectURL;
+              console.log(params);
+              try {
+                  var xhr = new XMLHttpRequest();
+                  xhr.open('GET', blobUrl, false);
+//                  xhr.responseType = 'blob';
+                  xhr.responseType = 'arraybuffer';
+                  xhr.send(null);
+                  if (xhr.status != 200) {
+                      console.log('Failed to load blob:',
+                          blobUrl,
+                          xhr.status, xhr.statusText);
+                  }
+
+                  var blob = new Blob([xhr.response], {type: params.fileType});
+                  console.log(blob);
+              } catch(e) {
+                  console.log(e +
+                      '\nFailed to fetch blob... ' +
+                          'See https://code.google.com/p/chromium/issues/detail?id=295829');
+              }
+
+
+              /*
               var xhr = new XMLHttpRequest();
               xhr.open('GET', params.fileObjectURL, false);
               xhr.responseType = 'blob';
-              xhr.onload = function()
-              {
-                  var formData = new FormData();
-                  formData.append(params.param, this.response, params.filename);
-
-                  attrs.data = formData;
-                  attrs.contentType = false;
-
-                  console.log(this.response);
+              xhr.send(null);
+              console.log("status is " + xhr.status);
+              if (xhr.status != 200) {
+                  console.log('Failed to load blob:',
+                      params.fileObjectURL,
+                      xhr.status, xhr.statusText);
               }
-              xhr.send();
+//              xhr.response
+//              xhr.onload = function()
+//              {
+*/
+              var formData = new FormData();
+//              formData.append(params.param, this.response, params.filename);
+              formData.append(params.param, blob, params.fileName);
+
+              attrs.data = formData;
+              attrs.contentType = false;
+
+//                  console.log(params.fileObjectURL);
+//              console.log(this.response);
+//              console.log(xhr.response);
+                  //console.log(this.responseText);
+//              console.log("Will attach (KBs): " + xhr.response.size + " of " + xhr.responseType);
+//              console.log("Will attach (KBs): " + this.response.size + " of " + this.response.type);
+//              }
+//              xhr.send();
               // cleanup
               window.URL.revokeObjectURL(params.fileObjectURL);
           }

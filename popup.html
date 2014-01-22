@@ -16,6 +16,7 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
   <script type="text/javascript" src="api_bridge.js"></script>
   <script type="text/javascript" src="server_model.js"></script>
   <script type="text/javascript" src="load_typekit.js"></script>
+  <script type="text/javascript" src="zip.js"></script>
   <link rel="stylesheet" href="popup.css"/>
   <link rel="stylesheet" href="jquery.tagit.css"/>
   <title>
@@ -64,10 +65,10 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
       </div>
       <div class="right-column">
           <div id="use_window_details" class="use_details" title="Insert page titles and URLs from the current window"><div class="icon-use-link-arrow sprite"></div><div class="icon-use-link-arrow icon-use-window-arrow sprite"></div><div class="icon-use-link"></div></div>
-          <br/>
+          <!--<br/>
           <div id="add_attachment_button" class="use_details" title="Attach this tab"><div class="icon-save"></div></div>
           <br/>
-          <div id="add_attachments_button" class="use_details" title="Attach all tabs"><div class="icon-save"></div></div>
+          <div id="add_attachments_button" class="use_details" title="Attach all tabs"><div class="icon-save"></div></div>-->
       </div>
     </div>
 
@@ -122,7 +123,7 @@ http://stackoverflow.com/questions/9498685/resize-popup-html-in-chrome-extension
         </div>
         <div id="success" style="display:none">
           <div class="sprite icon-success"></div>
-          Added <a id="new_task_link" target="_blank" href=""></a>
+          Added <a id="new_task_link" href=""></a><!-- target="_self"  -->
         </div>
       </div>
     </div>

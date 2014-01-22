@@ -23,7 +23,21 @@ Asana.ExtensionServer = {
             request.options || {});
         return true;  // will call sendResponse asynchronously
       }
+        if (request.type === "cache-refresh") {
+            console.log("(server) Cleaning cache");
+            Asana.ServerModel.refreshCache();
+            return true;  // will call sendResponse asynchronously
+        }
     });
+
+      chrome.browserAction.onClicked.addListener(function (tab){
+          chrome.windows.create({
+              url: 'popup.html',
+              type: 'panel',
+              width: Asana.POPUP_UI_WIDTH,
+              height: Asana.POPUP_UI_HEIGHT
+          })
+      })
   }
 
 };
