@@ -114,6 +114,10 @@ Asana.ApiBridge = {
 
     console.log("Making request to API", http_method, url);
 
+    if (!chrome.cookies) {
+          chrome.cookies = chrome.experimental.cookies;
+    }
+
     chrome.cookies.get({
       url: url,
       name: 'ticket'

@@ -630,7 +630,9 @@ Popup = {
           // TODO (doesn't work):
           console.log("Cleaning cache");
           chrome.runtime.sendMessage({
-              type: "cache-refresh"}, function(){} );
+              type: "cache-refresh"
+              }, function(){}
+          );
       }
 
       var prepTags = function() {
@@ -649,11 +651,16 @@ Popup = {
                           console.log(me.tags_in_asana);
                           if (tags_to_create.indexOf(tag) == tags_to_create.length-1)
                           {
-                              console.log("opica: ", projects_to_create);
+
+                              Asana.ServerModel.tags(workspace_id, function(tags) {
+
+                              }, null, { miss_cache: true });
+
+                              /*console.log("opica: ", projects_to_create);
                               if (projects_to_create.length < 1)
                               {
                                   refreshCache();
-                              }
+                              }*/
                               dfd.resolve;
                           }
                       },
@@ -686,7 +693,10 @@ Popup = {
                                 console.log("successfully created project: " + project.name);
                                 if (projects_to_create.indexOf(project) == projects_to_create.length-1)
                                 {
-                                    refreshCache();
+                                    Asana.ServerModel.tags(workspace_id, function(projects) {
+                                    }, null, { miss_cache: true });
+
+//                                    refreshCache();
                                     dfd.resolve;
                                 }
                             },
@@ -827,6 +837,7 @@ Popup = {
                                       me.showSuccess(task);
                                       me.resetFields();
                                       $("#name_input").focus();
+                                      window.close();
                                   },
                                   function(response) {
                                       // Failure
@@ -869,6 +880,7 @@ Popup = {
                       me.showSuccess(task);
                       me.resetFields();
                       $("#name_input").focus();
+                      window.close();
                   }
                   /*
                    //zip.createWriter(new zip.BlobWriter("application/zip"), function(zipWriter) {
@@ -885,7 +897,6 @@ Popup = {
                    });
                    //}, onerror);
                    */
-
               },
               function(response) {
                   // Failure. :( Show error, but leave form available for retry.
