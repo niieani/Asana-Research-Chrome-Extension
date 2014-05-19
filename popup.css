@@ -151,12 +151,13 @@ textarea::-webkit-scrollbar-thumb:hover {
 
 body {
   overflow: hidden;
+    overflow-y: visible;
   /* Also affects Asana.POPUP_UI_WIDTH and Asana.POPUP_UI_HEIGHT */
   /*width: 410px;*/
     /*height: 430px;  *//* keep this correct for the window-based (non-button) version */
   /*height: 580px;  *//* keep this correct for the window-based (non-button) version */
-  padding: 0px;
-  margin: 0px;
+  padding: 0;
+  margin: 0;
   background-color: #fff;
   font-size: 14px;
   font-family: proxima-nova, "Helvetica Neue", Arial, sans-serif;
@@ -194,7 +195,7 @@ a, input, textarea {
 }
 .right-column {
   display: inline-block;
-  margin-right: 8px;
+  /*margin-right: 8px;*/
   margin-left: 4px;
   width: 32px;
   height: 32px;
@@ -313,7 +314,8 @@ a, input, textarea {
 
 .notes-row #notes_input {
   resize: none;
-  height: 215px;
+  min-height: 100px;
+  /*height: 215px;*/
 }
 
 .icon-save {

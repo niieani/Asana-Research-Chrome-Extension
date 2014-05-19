@@ -300,12 +300,35 @@ Popup = {
   },
 
   setExpandedUi: function(is_expanded) {
+
+//      window.resizeTo(
+//          800,
+//          1500
+//      );
+
 //    if (this.is_external) {
+
+      var body = $("body");
+      var screenCssPixelRatio = (window.outerWidth + 16) / (window.innerWidth);
+      var width = Math.round(Asana.POPUP_UI_WIDTH * screenCssPixelRatio);
+//      var height = Math.round(body.outerHeight() * screenCssPixelRatio);
+
+      var height = Math.round((is_expanded ? Asana.POPUP_EXPANDED_UI_HEIGHT : Asana.POPUP_UI_HEIGHT) * screenCssPixelRatio);
+
+      console.log("resizing w and h:", width, height);
+
       window.resizeTo(
-          Asana.POPUP_UI_WIDTH,
-          (is_expanded ? Asana.POPUP_EXPANDED_UI_HEIGHT : Asana.POPUP_UI_HEIGHT)
-              + Asana.CHROME_TITLEBAR_HEIGHT);
-//    }
+          width,
+          height
+//          height
+      );
+
+//      window.resizeTo(
+//          Asana.POPUP_UI_WIDTH,
+//          (is_expanded ? Asana.POPUP_EXPANDED_UI_HEIGHT : Asana.POPUP_UI_HEIGHT)
+//              + Asana.CHROME_TITLEBAR_HEIGHT);
+
+
   },
 
   showView: function(name) {
@@ -420,6 +443,21 @@ Popup = {
         var name_input = $("#name_input");
         name_input.focus();
         name_input.select();
+
+          me.setExpandedUi();
+/*
+          var body = $("body");
+          var screenCssPixelRatio = (window.outerWidth - 8) / window.innerWidth;
+
+          window.resizeTo(
+              Math.round(body.outerWidth() * screenCssPixelRatio),
+              Math.round(body.outerHeight() * screenCssPixelRatio)
+          );
+*/
+//      chrome.app.window.current().setBounds({
+//          width: Math.round(body.outerWidth() * screenCssPixelRatio),
+//          height: Math.round(body.outerHeight() * screenCssPixelRatio)
+//      });
 
         if (favicon_url) {
           $(".icon-use-link").css("background-image", "url(" + favicon_url + ")");

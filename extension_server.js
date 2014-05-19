@@ -35,7 +35,10 @@ Asana.ExtensionServer = {
             url: 'popup.html',
             type: 'panel',
             width: Asana.POPUP_UI_WIDTH,
-            height: Asana.POPUP_UI_HEIGHT
+            height: 500,
+            focused: true
+//            width: Asana.POPUP_UI_WIDTH,
+//            height: Asana.POPUP_UI_HEIGHT
         })
     })
   }

@@ -187,8 +187,16 @@ Asana.ApiBridge = {
               try {
                   var xhr = new XMLHttpRequest();
                   xhr.open('GET', blobUrl, false);
+
+//                  xhr.open('GET', blobUrl, true);
+                  // has to be async because if want arraybuffer
 //                  xhr.responseType = 'blob';
-                  xhr.responseType = 'arraybuffer';
+//                  xhr.responseType = 'arraybuffer';
+
+//                  xhr.onload = function () {
+//
+//                  }
+
                   xhr.send(null);
                   if (xhr.status != 200) {
                       console.log('Failed to load blob:',
@@ -200,8 +208,7 @@ Asana.ApiBridge = {
                   console.log(blob);
               } catch(e) {
                   console.log(e +
-                      '\nFailed to fetch blob... ' +
-                          'See https://code.google.com/p/chromium/issues/detail?id=295829');
+                      '\nFailed to fetch blob... ');
               }
 
 
